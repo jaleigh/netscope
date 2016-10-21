@@ -123,6 +123,16 @@ module.exports = Analyzer = (function() {
           break;
         case "pooling":
           params = n.attribs.pooling_param;
+          if(params.kernel_size === undefined) {
+            params.kernel_size = params.kernel_h;
+          }
+          if(params.stride === undefined) {
+            params.stride = params.stride_h;
+          }
+          if(params.pad === undefined) {
+            params.pad = params.pad_h;
+          }
+
           kernel = params.kernel_size;
           stride = (ref14 = params.stride) != null ? ref14 : 1;
           pad = (ref15 = params.pad) != null ? ref15 : 0;
