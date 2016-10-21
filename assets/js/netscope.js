@@ -132,7 +132,7 @@ module.exports = Analyzer = (function() {
           d.hIn = parent.hOut;
           d.chIn = parent.chOut;
           d.chOut = d.chIn;
-          use_floor = params.use_floor ? False;
+          use_floor = params.use_floor != null ? params.use_floor : false;
           if use_floor
             d.wOut = Math.floor((d.wIn + 2*pad - kernel) / stride) + 1;
             d.hOut = Math.floor((d.hIn + 2*pad - kernel) / stride) + 1;                       
