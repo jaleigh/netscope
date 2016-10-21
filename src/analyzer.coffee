@@ -140,13 +140,18 @@ class Analyzer
                     pad    = params.pad ? 0
                     isglobal = params.global_pooling ? 0
                     pooltype = (params.pool ? 'MAX').toUpperCase()
+                    use_floor = params.use_floor ? False
                     d.wIn  = parent.wOut
                     d.hIn  = parent.hOut
                     d.chIn = parent.chOut
                     d.chOut = d.chIn
                     # according to http://caffe.berkeleyvision.org/tutorial/layers.html and https://github.com/BVLC/caffe/issues/3656
-                    d.wOut = Math.ceil((d.wIn + 2*pad - kernel) / stride) + 1
-                    d.hOut = Math.ceil((d.hIn + 2*pad - kernel) / stride) + 1
+                    if use_floor
+                        d.wOut = Math.floor((d.wIn + 2*pad - kernel) / stride) + 1
+                        d.hOut = Math.floor((d.hIn + 2*pad - kernel) / stride) + 1                        
+                    else
+                        d.wOut = Math.ceil((d.wIn + 2*pad - kernel) / stride) + 1
+                        d.hOut = Math.ceil((d.hIn + 2*pad - kernel) / stride) + 1
                     if isglobal
                         d.wOut = d.hOut = 1
                     #computation
