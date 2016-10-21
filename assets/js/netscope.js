@@ -133,13 +133,15 @@ module.exports = Analyzer = (function() {
           d.chIn = parent.chOut;
           d.chOut = d.chIn;
           use_floor = params.use_floor != null ? params.use_floor : false;
-          if use_floor
+          if(use_floor) {
             d.wOut = Math.floor((d.wIn + 2*pad - kernel) / stride) + 1;
             d.hOut = Math.floor((d.hIn + 2*pad - kernel) / stride) + 1;                       
-          else
+          }
+          else {
             d.wOut = Math.ceil((d.wIn + 2 * pad - kernel) / stride) + 1;
             d.hOut = Math.ceil((d.hIn + 2 * pad - kernel) / stride) + 1;
-
+          }
+          
           if (isglobal) {
             d.wOut = d.hOut = 1;
           }
