@@ -397,9 +397,9 @@ class Analyzer
 
                     din = [1, d.wIn, d.hIn, d.chIn]
 
-                    d.wOut = din[n.attribs.permute_param[1]]
-                    d.hOut = din[n.attribs.permute_param[2]]
-                    d.chOut = din[n.attribs.permute_param[3]]
+                    d.wOut = din[n.attribs.permute_param.order[1]]
+                    d.hOut = din[n.attribs.permute_param.order[2]]
+                    d.chOut = din[n.attribs.permute_param.order[3]]
                     #computation
                     # --none
                     #memory
@@ -415,11 +415,11 @@ class Analyzer
 
                     count = d.wIn * d.hIn * d.chIn
 
-                    din = [d.wIn, dhIn, d.chIn]
+                    din = [d.wIn, d.hIn, d.chIn]
 
-                    d.wOut = n.attribs.reshape_param[0] || din[n.attribs.reshape_param[0]]
-                    d.hOut = n.attribs.reshape_param[1] || din[n.attribs.reshape_param[1]]
-                    d.chOut = n.attribs.reshape_param[2] || din[n.attribs.reshape_param[2]]
+                    d.wOut = n.attribs.reshape_param.shape.dim[0] || din[n.attribs.reshape_param.shape.dim[0]]
+                    d.hOut = n.attribs.reshape_param.shape.dim[1] || din[n.attribs.reshape_param.shape.dim[1]]
+                    d.chOut = n.attribs.reshape_param.shape.dim[2] || din[n.attribs.reshape_param.shape.dim[2]]
 
                     if d.wOut == -1
                         d.wOut = count / (d.hOut*d.chOut)
