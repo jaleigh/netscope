@@ -351,6 +351,21 @@ class Analyzer
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                     
+                # permute changes memory layout but no calculation
+                when "permute"
+                    #dimensions
+                    ## assume pass-through
+                    d.wIn = +parent?.wOut?
+                    d.hIn = +parent?.hOut?
+                    d.chIn = +parent?.chOut?
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chOut = d.chIn
+                    #computation
+                    # --none
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+                    
                 # accuracy layers just pass through
                 when "accuracy"
                     #dimensions
