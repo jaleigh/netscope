@@ -203,6 +203,25 @@ class Analyzer
                     d.mem.param = 2  # alpha, beta
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                 
+                when "normalize"
+                    mode = n.attribs.norm_param.across_spatial ? 'ACROSS_SPATIAL' : 'ACROSS_CHANNELS'
+                    #dimensions
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chOut = d.chIn = parent.chOut
+                    #computation
+                    #  input*input
+                    num_inputs = d.wIn*d.hIn*d.chIn
+                    d.comp.macc = num_inputs
+                    d.comp.add = num_inputs
+                    d.comp.exp = d.wIn*d.hIn*d
+                    d.com.div = 2*num_inputs
+                    #memory
+                    d.mem.param = 1
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+                    
                 when "concat"
                     #dimensions
                     d.wIn = parent.wOut
@@ -233,6 +252,24 @@ class Analyzer
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                     
+                when "priorbox"
+                    #dimensions
+                    num_priors = 1 + n.attribs.prior_box_param.aspect_ratio.length
+                    if n.attribs.prior_box_param.flip
+                        num_priors *= 2
+                    num_priors += n.attribs.prior_box_param.max_size ? 1 : 0
+                    
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chOut = 4 * num_priors
+                    #computation
+                    d.comp.div = d.wIn*d.hIn*num_priors*4
+                    d.comp.macc = d.wIn*d.hIn*num_priors*4
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+                    
                 when "softmax", "softmaxwithloss", "softmax_loss"
                     #dimensions
                     d.wIn = parent.wOut
@@ -241,7 +278,6 @@ class Analyzer
                     d.hOut = d.hIn
                     d.chOut = d.chIn = parent.chOut
                     #computation
-                    d.comp.exp = d.wIn*d.hIn*d.chIn
                     d.comp.add = d.wIn*d.hIn*d.chIn
                     d.comp.div = d.wIn*d.hIn*d.chIn
                     #memory
@@ -336,23 +372,8 @@ class Analyzer
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                                    
-                #implicit layers use activation memory, but no computation 
-                when "implicit"
-                    #dimensions
-                    ## assume pass-through
-                    d.wIn = +parent?.wOut?
-                    d.hIn = +parent?.hOut?
-                    d.chIn = +parent?.chOut?
-                    d.wOut = d.wIn
-                    d.hOut = d.hIn
-                    d.chOut = d.chIn
-                    #computation
-                    # --none
-                    #memory
-                    d.mem.activation = d.wOut*d.hOut*d.chOut
-                    
-                # permute changes memory layout but no calculation
-                when "permute"
+                #implicit and permute layers use activation memory, but no computation 
+                when "implicit", "permute"
                     #dimensions
                     ## assume pass-through
                     d.wIn = +parent?.wOut?
