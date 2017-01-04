@@ -16302,7 +16302,7 @@ module.exports = Analyzer = (function() {
           pad = (ref15 = params.pad) != null ? ref15 : 0;
           isglobal = (ref16 = params.global_pooling) != null ? ref16 : 0;
           pooltype = ((ref17 = params.pool) != null ? ref17 : 'MAX').toUpperCase();
-          use_floor = (ref18 = params.use_floor) != null ? ref18 : False;
+          use_floor = (ref18 = params.use_floor) != null ? ref18 : false;
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
           d.chIn = parent.chOut;
@@ -16367,7 +16367,7 @@ module.exports = Analyzer = (function() {
           d.comp.macc = num_inputs;
           d.comp.add = num_inputs;
           d.comp.exp = d.wIn * d.hIn * d;
-          d.com.div = 2 * num_inputs;
+          d.comp.div = 2 * num_inputs;
           d.mem.param = 1;
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;

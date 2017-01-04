@@ -140,7 +140,7 @@ class Analyzer
                     pad    = params.pad ? 0
                     isglobal = params.global_pooling ? 0
                     pooltype = (params.pool ? 'MAX').toUpperCase()
-                    use_floor = params.use_floor ? False
+                    use_floor = params.use_floor ? false
                     d.wIn  = parent.wOut
                     d.hIn  = parent.hOut
                     d.chIn = parent.chOut
@@ -217,7 +217,7 @@ class Analyzer
                     d.comp.macc = num_inputs
                     d.comp.add = num_inputs
                     d.comp.exp = d.wIn*d.hIn*d
-                    d.com.div = 2*num_inputs
+                    d.comp.div = 2*num_inputs
                     #memory
                     d.mem.param = 1
                     d.mem.activation = d.wOut*d.hOut*d.chOut
