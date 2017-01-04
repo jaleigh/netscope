@@ -16179,7 +16179,7 @@ module.exports = Analyzer = (function() {
   function Analyzer() {}
 
   Analyzer.prototype.analyze = function(net) {
-    var analysis, d, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, layertype, len, len1, len2, mem, mode, n, num_inputs, num_ops, num_priors, numout, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref4, ref5, ref6, ref7, ref8, ref9, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
+    var analysis, count, d, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, layertype, len, len1, len2, mem, mode, n, num_inputs, num_ops, num_priors, numout, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref4, ref5, ref6, ref7, ref8, ref9, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
     ref = net.sortTopologically();
     for (i = 0, len = ref.length; i < len; i++) {
       n = ref[i];
@@ -16503,13 +16503,40 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "implicit":
-        case "permute":
           d.wIn = +((parent != null ? parent.wOut : void 0) != null);
           d.hIn = +((parent != null ? parent.hOut : void 0) != null);
           d.chIn = +((parent != null ? parent.chOut : void 0) != null);
           d.wOut = d.wIn;
           d.hOut = d.hIn;
           d.chOut = d.chIn;
+          d.mem.activation = d.wOut * d.hOut * d.chOut;
+          break;
+        case "permute":
+          d.wIn = parent != null ? parent.wOut : void 0;
+          d.hIn = parent != null ? parent.hOut : void 0;
+          d.chIn = parent != null ? parent.chOut : void 0;
+          din = [1, d.wIn, d.hIn, d.chIn];
+          d.wOut = din[n.attribs.permute_param[1]];
+          d.hOut = din[n.attribs.permute_param[2]];
+          d.chOut = din[n.attribs.permute_param[3]];
+          d.mem.activation = d.wOut * d.hOut * d.chOut;
+          break;
+        case "reshape":
+          d.wIn = parent != null ? parent.wOut : void 0;
+          d.hIn = parent != null ? parent.hOut : void 0;
+          d.chIn = parent != null ? parent.chOut : void 0;
+          count = d.wIn * d.hIn * d.chIn;
+          din = [d.wIn, dhIn, d.chIn];
+          d.wOut = n.attribs.reshape_param[0] || din[n.attribs.reshape_param[0]];
+          d.hOut = n.attribs.reshape_param[1] || din[n.attribs.reshape_param[1]];
+          d.chOut = n.attribs.reshape_param[2] || din[n.attribs.reshape_param[2]];
+          if (d.wOut === -1) {
+            d.wOut = count / (d.hOut * d.chOut);
+          } else if (d.hOut === -1) {
+            d.hOut = count / (d.wOut * d.chOut);
+          } else if (d.chOut === -1) {
+            d.chOut = count / (d.wOut * d.hOut);
+          }
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "accuracy":

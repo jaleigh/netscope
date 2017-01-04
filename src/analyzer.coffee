@@ -373,7 +373,7 @@ class Analyzer
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                                    
                 #implicit and permute layers use activation memory, but no computation 
-                when "implicit", "permute"
+                when "implicit"
                     #dimensions
                     ## assume pass-through
                     d.wIn = +parent?.wOut?
@@ -386,7 +386,53 @@ class Analyzer
                     # --none
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
-                    
+                  
+                # permute reorders data
+                when "permute"
+                    #dimensions
+                    ## assume pass-through
+                    d.wIn = parent?.wOut
+                    d.hIn = parent?.hOut
+                    d.chIn = parent?.chOut
+
+                    din = [1, d.wIn, d.hIn, d.chIn]
+
+                    d.wOut = din[n.attribs.permute_param[1]]
+                    d.hOut = din[n.attribs.permute_param[2]]
+                    d.chOut = din[n.attribs.permute_param[3]]
+                    #computation
+                    # --none
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+  
+                # reshape input blob
+                when "reshape"
+                    #dimensions
+                    ## assume pass-through
+                    d.wIn = parent?.wOut
+                    d.hIn = parent?.hOut
+                    d.chIn = parent?.chOut
+
+                    count = d.wIn * d.hIn * d.chIn
+
+                    din = [d.wIn, dhIn, d.chIn]
+
+                    d.wOut = n.attribs.reshape_param[0] || din[n.attribs.reshape_param[0]]
+                    d.hOut = n.attribs.reshape_param[1] || din[n.attribs.reshape_param[1]]
+                    d.chOut = n.attribs.reshape_param[2] || din[n.attribs.reshape_param[2]]
+
+                    if d.wOut == -1
+                        d.wOut = count / (d.hOut*d.chOut)
+                    else if d.hOut == -1
+                        d.hOut = count / (d.wOut*d.chOut)
+                    else if d.chOut == -1
+                        d.chOut = count / (d.wOut*d.hOut)
+
+                    #computation
+                    # --none
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+
                 # accuracy layers just pass through
                 when "accuracy"
                     #dimensions
