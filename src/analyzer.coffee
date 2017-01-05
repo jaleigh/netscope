@@ -52,12 +52,19 @@ class Analyzer
                     stride_h = params.stride_h ? (params.stride ? 1)
                     pad_w    = params.pad_w ? (params.pad ? 0)
                     pad_h    = params.pad_h ? (params.pad ? 0)
+                    dilation = params.dilation ? 0
                     numout   = params.num_output
                     d.wIn    = parent.wOut
                     d.hIn    = parent.hOut
                     # according to http://caffe.berkeleyvision.org/tutorial/layers.html and https://github.com/BVLC/caffe/issues/3656 
-                    d.wOut = Math.floor((d.wIn + 2*pad_w - kernel_w) / stride_w) + 1
-                    d.hOut = Math.floor((d.hIn + 2*pad_h - kernel_h) / stride_h) + 1
+                    # modified to include dilation
+                    kw = kernel_w
+                    kh = kernel_h
+                    if dilation > 0
+                        kw = dilation * (kw - 1) + 1
+                        kh = dilation * (kh - 1) + 1
+                    d.wOut = Math.floor((d.wIn + 2*pad_w - kw) / stride_w) + 1
+                    d.hOut = Math.floor((d.hIn + 2*pad_h - kh) / stride_h) + 1
                     d.chIn = parent.chOut
                     d.chOut = numout
                     #computation
