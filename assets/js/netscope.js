@@ -15999,10 +15999,10 @@ module.exports = Analyzer = (function() {
   function Analyzer() {}
 
   Analyzer.prototype.analyze = function(net) {
-    var analysis, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, layertype, len, len1, len2, mem, mode, n, num_inputs, num_ops, num_priors, numout, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref4, ref5, ref6, ref7, ref8, ref9, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
+    var analysis, base, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, m, mem, minW, mode, n, num_inputs, num_ops, num_priors, numout, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref4, ref5, ref6, ref7, ref8, ref9, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
     ref = net.sortTopologically();
-    for (i = 0, len = ref.length; i < len; i++) {
-      n = ref[i];
+    for (j = 0, len = ref.length; j < len; j++) {
+      n = ref[j];
       d = n.analysis;
       d.wIn = d.hIn = d.wOut = d.hOut = 0;
       d.chIn = d.chOut = 0;
@@ -16204,14 +16204,14 @@ module.exports = Analyzer = (function() {
           d.wOut = d.wIn;
           d.hOut = d.hIn;
           ref22 = n.parents;
-          for (j = 0, len1 = ref22.length; j < len1; j++) {
-            p = ref22[j];
+          for (k = 0, len1 = ref22.length; k < len1; k++) {
+            p = ref22[k];
             d.chIn += p.analysis.chOut;
           }
           d.chOut = d.chIn;
           ref23 = n.parents;
-          for (k = 0, len2 = ref23.length; k < len2; k++) {
-            p = ref23[k];
+          for (l = 0, len2 = ref23.length; l < len2; l++) {
+            p = ref23[l];
             failed = failed || (p.analysis.wOut !== d.wIn || p.analysis.hOut !== d.hIn);
           }
           if (failed) {
@@ -16231,14 +16231,27 @@ module.exports = Analyzer = (function() {
           break;
         case "priorbox":
           num_priors = 1 + n.attribs.prior_box_param.aspect_ratio.length;
+          if (isNaN(num_priors)) {
+            num_priors = 2;
+          }
           if (n.attribs.prior_box_param.flip) {
             num_priors *= 2;
           }
           num_priors += (ref24 = n.attribs.prior_box_param.max_size) != null ? ref24 : {
             1: 0
           };
-          d.wIn = parent.wOut;
-          d.hIn = parent.hOut;
+          minW = 99999999;
+          p = typeof (base = n.parents)[0] === "function" ? base[0](analysis) : void 0;
+          ref25 = n.parents;
+          for (m = 0, len3 = ref25.length; m < len3; m++) {
+            i = ref25[m];
+            if (i.analysis.wOut < minW) {
+              minW = i.analysis.wOut;
+              p = i.analysis;
+            }
+          }
+          d.wIn = p.wOut;
+          d.hIn = p.hOut;
           d.wOut = d.wIn;
           d.hOut = d.hIn;
           d.chOut = 4 * num_priors;
@@ -16278,7 +16291,7 @@ module.exports = Analyzer = (function() {
           if (failed) {
             onerror('ELTWISE: input dimensions dont agree!');
           }
-          op = (ref25 = (ref26 = n.eltwise_param) != null ? (ref27 = ref26.operation) != null ? ref27.toUpperCase() : void 0 : void 0) != null ? ref25 : 'SUM';
+          op = (ref26 = (ref27 = n.eltwise_param) != null ? (ref28 = ref27.operation) != null ? ref28.toUpperCase() : void 0 : void 0) != null ? ref26 : 'SUM';
           if (op === 'SUM') {
             d.comp.add = d.wIn * d.hIn * d.chIn;
           } else if (op === 'MAX') {
@@ -16292,12 +16305,12 @@ module.exports = Analyzer = (function() {
           break;
         case "deconvolution":
           params = n.attribs.convolution_param;
-          kernel_w = (ref28 = params.kernel_w) != null ? ref28 : params.kernel_size;
-          kernel_h = (ref29 = params.kernel_h) != null ? ref29 : params.kernel_size;
-          stride_w = (ref30 = params.stride_w) != null ? ref30 : (ref31 = params.stride) != null ? ref31 : 1;
-          stride_h = (ref32 = params.stride_h) != null ? ref32 : (ref33 = params.stride) != null ? ref33 : 1;
-          pad_w = (ref34 = params.pad_w) != null ? ref34 : (ref35 = params.pad) != null ? ref35 : 0;
-          pad_h = (ref36 = params.pad_h) != null ? ref36 : (ref37 = params.pad) != null ? ref37 : 0;
+          kernel_w = (ref29 = params.kernel_w) != null ? ref29 : params.kernel_size;
+          kernel_h = (ref30 = params.kernel_h) != null ? ref30 : params.kernel_size;
+          stride_w = (ref31 = params.stride_w) != null ? ref31 : (ref32 = params.stride) != null ? ref32 : 1;
+          stride_h = (ref33 = params.stride_h) != null ? ref33 : (ref34 = params.stride) != null ? ref34 : 1;
+          pad_w = (ref35 = params.pad_w) != null ? ref35 : (ref36 = params.pad) != null ? ref36 : 0;
+          pad_h = (ref37 = params.pad_h) != null ? ref37 : (ref38 = params.pad) != null ? ref38 : 0;
           numout = params.num_output;
           d.wIn = parent != null ? parent.wOut : void 0;
           d.hIn = parent != null ? parent.hOut : void 0;
@@ -16386,11 +16399,11 @@ module.exports = Analyzer = (function() {
           out: d.chOut + 'ch ⋅ ' + d.wOut + '×' + d.hOut
         };
         ops = ((function() {
-          var ref38, results;
-          ref38 = d.comp;
+          var ref39, results;
+          ref39 = d.comp;
           results = [];
-          for (key in ref38) {
-            val = ref38[key];
+          for (key in ref39) {
+            val = ref39[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }
@@ -16401,11 +16414,11 @@ module.exports = Analyzer = (function() {
           analysis.ops = ops;
         }
         mem = ((function() {
-          var ref38, results;
-          ref38 = d.mem;
+          var ref39, results;
+          ref39 = d.mem;
           results = [];
-          for (key in ref38) {
-            val = ref38[key];
+          for (key in ref39) {
+            val = ref39[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }

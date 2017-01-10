@@ -262,12 +262,22 @@ class Analyzer
                 when "priorbox"
                     #dimensions
                     num_priors = 1 + n.attribs.prior_box_param.aspect_ratio.length
+                    if isNaN(num_priors)
+                        num_priors = 2
                     if n.attribs.prior_box_param.flip
                         num_priors *= 2
                     num_priors += n.attribs.prior_box_param.max_size ? 1 : 0
                     
-                    d.wIn = parent.wOut
-                    d.hIn = parent.hOut
+                    #select parent for pirorbox as the parent with the smallest layer width and height
+                    minW = 99999999
+                    p = n.parents[0]?analysis
+                    for i in n.parents
+                        if i.analysis.wOut < minW
+                            minW = i.analysis.wOut
+                            p = i.analysis
+
+                    d.wIn = p.wOut
+                    d.hIn = p.hOut
                     d.wOut = d.wIn
                     d.hOut = d.hIn
                     d.chOut = 4 * num_priors
