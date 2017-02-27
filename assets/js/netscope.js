@@ -15999,7 +15999,7 @@ module.exports = Analyzer = (function() {
   function Analyzer() {}
 
   Analyzer.prototype.analyze = function(net) {
-    var analysis, base, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, m, mem, minW, mode, n, num_inputs, num_ops, num_priors, numout, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref4, ref5, ref6, ref7, ref8, ref9, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
+    var analysis, base, concat_axis, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, len4, len5, len6, len7, m, mem, minW, mode, n, na, nmsize, nsize, num_inputs, num_ops, num_priors, numout, o, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref39, ref4, ref40, ref41, ref5, ref6, ref7, ref8, ref9, s, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
     ref = net.sortTopologically();
     for (j = 0, len = ref.length; j < len; j++) {
       n = ref[j];
@@ -16199,20 +16199,62 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "concat":
-          d.wIn = parent.wOut;
-          d.hIn = parent.hOut;
-          d.wOut = d.wIn;
-          d.hOut = d.hIn;
-          ref22 = n.parents;
-          for (k = 0, len1 = ref22.length; k < len1; k++) {
-            p = ref22[k];
-            d.chIn += p.analysis.chOut;
+          concat_axis = 1;
+          if (n.attribs.concat_param.axis !== null) {
+            concat_axis = n.attribs.concat_param.axis;
           }
-          d.chOut = d.chIn;
-          ref23 = n.parents;
-          for (l = 0, len2 = ref23.length; l < len2; l++) {
-            p = ref23[l];
-            failed = failed || (p.analysis.wOut !== d.wIn || p.analysis.hOut !== d.hIn);
+          if (concat_axis === 1) {
+            d.wIn = parent.wOut;
+            d.hIn = parent.hOut;
+            d.wOut = d.wIn;
+            d.hOut = d.hIn;
+            ref22 = n.parents;
+            for (k = 0, len1 = ref22.length; k < len1; k++) {
+              p = ref22[k];
+              d.chIn += p.analysis.chOut;
+            }
+            d.chOut = d.chIn;
+            ref23 = n.parents;
+            for (l = 0, len2 = ref23.length; l < len2; l++) {
+              p = ref23[l];
+              failed = failed || (p.analysis.wOut !== d.wIn || p.analysis.hOut !== d.hIn);
+            }
+          } else if (concat_axis === 2) {
+            d.wIn = parent.wOut;
+            ref24 = n.parents;
+            for (m = 0, len3 = ref24.length; m < len3; m++) {
+              p = ref24[m];
+              d.hIn += p.analysis.hIn;
+            }
+            d.wOut = d.wIn;
+            d.hOut = d.hIn;
+            d.chIn = parent.chOut;
+            d.chOut = d.chIn;
+            ref25 = n.parents;
+            for (o = 0, len4 = ref25.length; o < len4; o++) {
+              p = ref25[o];
+              failed = failed || (p.analysis.chOut !== d.chIn || p.analysis.wOut !== d.wIn);
+            }
+          } else if (concat_axis === 3) {
+            ref26 = n.parents;
+            for (q = 0, len5 = ref26.length; q < len5; q++) {
+              p = ref26[q];
+              d.wIn += p.analysis.wIn;
+            }
+            d.hIn = parent.hOut;
+            d.wOut = d.wIn;
+            d.hOut = d.hIn;
+            d.chIn = parent.chOut;
+            d.chOut = d.chIn;
+            ref27 = n.parents;
+            for (r = 0, len6 = ref27.length; r < len6; r++) {
+              p = ref27[r];
+              failed = failed || (p.analysis.chOut !== d.chIn || p.analysis.hOut !== d.hIn);
+            }
+          } else {
+            if (failed) {
+              window.oneerror('CONCAT: invalid concat_axis!');
+            }
           }
           if (failed) {
             window.onerror('CONCAT: input dimensions dont agree!');
@@ -16230,21 +16272,21 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "priorbox":
-          num_priors = 1 + n.attribs.prior_box_param.aspect_ratio.length;
-          if (isNaN(num_priors)) {
-            num_priors = 2;
-          }
+          na = [].concat(n.attribs.prior_box_param.aspect_ratio).length;
           if (n.attribs.prior_box_param.flip) {
-            num_priors *= 2;
+            na *= 2;
           }
-          num_priors += (ref24 = n.attribs.prior_box_param.max_size) != null ? ref24 : {
-            1: 0
-          };
+          nsize = [].concat(n.attribs.prior_box_param.min_size).length;
+          num_priors = na * nsize;
+          if (n.attribs.prior_box_param.max_size) {
+            nmsize = [].concat(n.attribs.prior_box_param.max_size).length;
+            num_priors += nmsize;
+          }
           minW = 99999999;
           p = typeof (base = n.parents)[0] === "function" ? base[0](analysis) : void 0;
-          ref25 = n.parents;
-          for (m = 0, len3 = ref25.length; m < len3; m++) {
-            i = ref25[m];
+          ref28 = n.parents;
+          for (s = 0, len7 = ref28.length; s < len7; s++) {
+            i = ref28[s];
             if (i.analysis.wOut < minW) {
               minW = i.analysis.wOut;
               p = i.analysis;
@@ -16252,9 +16294,9 @@ module.exports = Analyzer = (function() {
           }
           d.wIn = p.wOut;
           d.hIn = p.hOut;
-          d.wOut = d.wIn;
-          d.hOut = d.hIn;
-          d.chOut = 4 * num_priors;
+          d.wOut = 1;
+          d.hOut = d.hIn * d.wIn * num_priors * 4;
+          d.chOut = 2;
           d.comp.div = d.wIn * d.hIn * num_priors * 4;
           d.comp.macc = d.wIn * d.hIn * num_priors * 4;
           d.mem.activation = d.wOut * d.hOut * d.chOut;
@@ -16291,7 +16333,7 @@ module.exports = Analyzer = (function() {
           if (failed) {
             onerror('ELTWISE: input dimensions dont agree!');
           }
-          op = (ref26 = (ref27 = n.eltwise_param) != null ? (ref28 = ref27.operation) != null ? ref28.toUpperCase() : void 0 : void 0) != null ? ref26 : 'SUM';
+          op = (ref29 = (ref30 = n.eltwise_param) != null ? (ref31 = ref30.operation) != null ? ref31.toUpperCase() : void 0 : void 0) != null ? ref29 : 'SUM';
           if (op === 'SUM') {
             d.comp.add = d.wIn * d.hIn * d.chIn;
           } else if (op === 'MAX') {
@@ -16305,12 +16347,12 @@ module.exports = Analyzer = (function() {
           break;
         case "deconvolution":
           params = n.attribs.convolution_param;
-          kernel_w = (ref29 = params.kernel_w) != null ? ref29 : params.kernel_size;
-          kernel_h = (ref30 = params.kernel_h) != null ? ref30 : params.kernel_size;
-          stride_w = (ref31 = params.stride_w) != null ? ref31 : (ref32 = params.stride) != null ? ref32 : 1;
-          stride_h = (ref33 = params.stride_h) != null ? ref33 : (ref34 = params.stride) != null ? ref34 : 1;
-          pad_w = (ref35 = params.pad_w) != null ? ref35 : (ref36 = params.pad) != null ? ref36 : 0;
-          pad_h = (ref37 = params.pad_h) != null ? ref37 : (ref38 = params.pad) != null ? ref38 : 0;
+          kernel_w = (ref32 = params.kernel_w) != null ? ref32 : params.kernel_size;
+          kernel_h = (ref33 = params.kernel_h) != null ? ref33 : params.kernel_size;
+          stride_w = (ref34 = params.stride_w) != null ? ref34 : (ref35 = params.stride) != null ? ref35 : 1;
+          stride_h = (ref36 = params.stride_h) != null ? ref36 : (ref37 = params.stride) != null ? ref37 : 1;
+          pad_w = (ref38 = params.pad_w) != null ? ref38 : (ref39 = params.pad) != null ? ref39 : 0;
+          pad_h = (ref40 = params.pad_h) != null ? ref40 : (ref41 = params.pad) != null ? ref41 : 0;
           numout = params.num_output;
           d.wIn = parent != null ? parent.wOut : void 0;
           d.hIn = parent != null ? parent.hOut : void 0;
@@ -16399,11 +16441,11 @@ module.exports = Analyzer = (function() {
           out: d.chOut + 'ch ⋅ ' + d.wOut + '×' + d.hOut
         };
         ops = ((function() {
-          var ref39, results;
-          ref39 = d.comp;
+          var ref42, results;
+          ref42 = d.comp;
           results = [];
-          for (key in ref39) {
-            val = ref39[key];
+          for (key in ref42) {
+            val = ref42[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }
@@ -16414,11 +16456,11 @@ module.exports = Analyzer = (function() {
           analysis.ops = ops;
         }
         mem = ((function() {
-          var ref39, results;
-          ref39 = d.mem;
+          var ref42, results;
+          ref42 = d.mem;
           results = [];
-          for (key in ref39) {
-            val = ref39[key];
+          for (key in ref42) {
+            val = ref42[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }

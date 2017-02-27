@@ -231,15 +231,41 @@ class Analyzer
                     
                 when "concat"
                     #dimensions
-                    d.wIn = parent.wOut
-                    d.hIn = parent.hOut
-                    d.wOut = d.wIn
-                    d.hOut = d.hIn
-                    # sum up channels from inputs
-                    d.chIn += p.analysis.chOut for p in n.parents
-                    d.chOut = d.chIn
-                    # check input dimensions
-                    failed = failed || (p.analysis.wOut != d.wIn || p.analysis.hOut != d.hIn) for p in n.parents
+                    concat_axis = 1
+                    if n.attribs.concat_param.axis != null
+                        concat_axis = n.attribs.concat_param.axis
+
+                    if concat_axis == 1
+                        d.wIn = parent.wOut
+                        d.hIn = parent.hOut
+                        d.wOut = d.wIn
+                        d.hOut = d.hIn
+                        # sum up channels from inputs
+                        d.chIn += p.analysis.chOut for p in n.parents
+                        d.chOut = d.chIn
+                        # check input dimensions
+                        failed = failed || (p.analysis.wOut != d.wIn || p.analysis.hOut != d.hIn) for p in n.parents
+                    else if concat_axis == 2
+                        d.wIn = parent.wOut
+                        d.hIn += p.analysis.hIn for p in n.parents
+                        d.wOut = d.wIn
+                        d.hOut = d.hIn
+                        # sum up channels from inputs
+                        d.chIn = parent.chOut
+                        d.chOut = d.chIn
+                        failed = failed || (p.analysis.chOut != d.chIn || p.analysis.wOut != d.wIn) for p in n.parents    
+                    else if concat_axis == 3
+                        d.wIn += p.analysis.wIn for p in n.parents
+                        d.hIn = parent.hOut
+                        d.wOut = d.wIn
+                        d.hOut = d.hIn
+                        # sum up channels from inputs
+                        d.chIn = parent.chOut
+                        d.chOut = d.chIn
+                        failed = failed || (p.analysis.chOut != d.chIn || p.analysis.hOut != d.hIn) for p in n.parents
+                    else
+                        window.oneerror('CONCAT: invalid concat_axis!') if failed
+                    
                     window.onerror('CONCAT: input dimensions dont agree!') if failed
                     #computation
                     # --none
@@ -261,12 +287,14 @@ class Analyzer
                     
                 when "priorbox"
                     #dimensions
-                    num_priors = 1 + n.attribs.prior_box_param.aspect_ratio.length
-                    if isNaN(num_priors)
-                        num_priors = 2
+                    na = [].concat(n.attribs.prior_box_param.aspect_ratio).length
                     if n.attribs.prior_box_param.flip
-                        num_priors *= 2
-                    num_priors += n.attribs.prior_box_param.max_size ? 1 : 0
+                        na *= 2
+                    nsize = [].concat(n.attribs.prior_box_param.min_size).length
+                    num_priors = na * nsize
+                    if(n.attribs.prior_box_param.max_size)
+                        nmsize = [].concat(n.attribs.prior_box_param.max_size).length
+                        num_priors += nmsize
                     
                     #select parent for pirorbox as the parent with the smallest layer width and height
                     minW = 99999999
@@ -278,9 +306,9 @@ class Analyzer
 
                     d.wIn = p.wOut
                     d.hIn = p.hOut
-                    d.wOut = d.wIn
-                    d.hOut = d.hIn
-                    d.chOut = 4 * num_priors
+                    d.wOut = 1
+                    d.hOut = d.hIn * d.wIn * num_priors * 4
+                    d.chOut = 2
                     #computation
                     d.comp.div = d.wIn*d.hIn*num_priors*4
                     d.comp.macc = d.wIn*d.hIn*num_priors*4
