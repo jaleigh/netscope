@@ -42,8 +42,8 @@ class Analyzer
                     #memory
                     #-- none 
                     d.mem.activation = d.wOut*d.hOut*d.chOut
-                    
-                when "convolution"
+                  
+                when "convolution", "binaryconvolution"
                     #dimensions
                     params   = n.attribs.convolution_param
                     kernel_w = params.kernel_w ? params.kernel_size
@@ -123,7 +123,20 @@ class Analyzer
                           squeeze_cache : if n.name.indexOf("squeeze") > -1 then d.chOut*d.wOut*d.hOut else ""
                         })
                     
-                
+                when "binaryactivation"
+                    #dimensions
+                    ## assume pass-through
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.chIn = parent.chOut
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chOut = d.chIn
+                    #computation
+                    d.comp.add = (d.wIn*d.hIn)*d.chIn
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+
                 when "innerproduct", "inner_product"
                     #dimensions
                     numout = n.attribs.inner_product_param.num_output
@@ -232,7 +245,7 @@ class Analyzer
                 when "concat"
                     #dimensions
                     concat_axis = 1
-                    if n.attribs.concat_param.axis != null
+                    if n.attribs.concat_param && n.attribs.concat_param.axis != null
                         concat_axis = n.attribs.concat_param.axis
 
                     if concat_axis == 1
@@ -271,7 +284,21 @@ class Analyzer
                     # --none
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
-                    
+                  
+                when "duplicate"
+                    num_output = n.attribs.duplicate_param.num_output
+                    #dimensions
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chIn = parent.chOut
+                    d.chOut = num_output
+                    #computation
+                    d.comp.comp = 0
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+
                 #relu/dropout use some memory, do some comparisons
                 when "relu", "dropout"
                     #dimensions
@@ -419,19 +446,44 @@ class Analyzer
                                    
                 #implicit and permute layers use activation memory, but no computation 
                 when "implicit"
-                    #dimensions
-                    ## assume pass-through
-                    d.wIn = +parent?.wOut?
-                    d.hIn = +parent?.hOut?
-                    d.chIn = +parent?.chOut?
-                    d.wOut = d.wIn
-                    d.hOut = d.hIn
-                    d.chOut = d.chIn
+                    # if the parent is a binary activation 
+                    if n.parents and n.parents.length > 0 and n.parents[0].type == 'BinaryActivation'
+                        params   = n.parents[0].attribs.convolution_param
+                        kernel_w = params.kernel_w ? params.kernel_size
+                        kernel_h = params.kernel_h ? params.kernel_size
+                        stride_w = params.stride_w ? (params.stride ? 1)
+                        stride_h = params.stride_h ? (params.stride ? 1)
+                        pad_w    = params.pad_w ? (params.pad ? 0)
+                        pad_h    = params.pad_h ? (params.pad ? 0)
+                        dilation = params.dilation ? 0
+                        numout   = params.num_output
+                        d.wIn    = parent.wOut
+                        d.hIn    = parent.hOut
+                        # according to http://caffe.berkeleyvision.org/tutorial/layers.html and https://github.com/BVLC/caffe/issues/3656 
+                        # modified to include dilation
+                        kw = kernel_w
+                        kh = kernel_h
+                        if dilation > 0
+                            kw = dilation * (kw - 1) + 1
+                            kh = dilation * (kh - 1) + 1
+                        d.wOut = Math.floor((d.wIn + 2*pad_w - kw) / stride_w) + 1
+                        d.hOut = Math.floor((d.hIn + 2*pad_h - kh) / stride_h) + 1
+                        d.chIn = parent.chOut
+                        d.chOut = numout
+                    else
+                        #dimensions
+                        ## assume pass-through
+                        d.wIn = parent?.wOut
+                        d.hIn = parent?.hOut
+                        d.chIn = parent?.chOut
+                        d.wOut = d.wIn
+                        d.hOut = d.hIn
+                        d.chOut = d.chIn
                     #computation
                     # --none
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
-                  
+              
                 # permute reorders data
                 when "permute"
                     #dimensions
