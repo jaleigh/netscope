@@ -15999,7 +15999,7 @@ module.exports = Analyzer = (function() {
   function Analyzer() {}
 
   Analyzer.prototype.analyze = function(net) {
-    var analysis, base, concat_axis, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, len4, len5, len6, len7, m, mem, minW, mode, n, na, nmsize, nsize, num_inputs, num_ops, num_output, num_priors, numout, o, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref39, ref4, ref40, ref41, ref42, ref43, ref44, ref45, ref46, ref47, ref48, ref49, ref5, ref50, ref51, ref52, ref6, ref7, ref8, ref9, s, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
+    var analysis, base, concat_axis, count, d, dilation, din, failed, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, len4, len5, len6, len7, m, mem, minW, mode, n, na, nmsize, nsize, num_inputs, num_ops, num_output, num_priors, numout, o, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref39, ref4, ref40, ref41, ref42, ref43, ref44, ref45, ref46, ref47, ref48, ref49, ref5, ref50, ref51, ref52, ref53, ref54, ref55, ref6, ref7, ref8, ref9, s, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
     ref = net.sortTopologically();
     for (j = 0, len = ref.length; j < len; j++) {
       n = ref[j];
@@ -16135,12 +16135,12 @@ module.exports = Analyzer = (function() {
           break;
         case "pooling":
           params = n.attribs.pooling_param;
-          kernel = params.kernel_size;
-          stride = (ref15 = params.stride) != null ? ref15 : 1;
-          pad = (ref16 = params.pad) != null ? ref16 : 0;
-          isglobal = (ref17 = params.global_pooling) != null ? ref17 : 0;
-          pooltype = ((ref18 = params.pool) != null ? ref18 : 'MAX').toUpperCase();
-          use_floor = (ref19 = params.use_floor) != null ? ref19 : false;
+          kernel = (ref15 = params.kernel_size) != null ? ref15 : params.kernel_h;
+          stride = (ref16 = params.stride) != null ? ref16 : (ref17 = params.stride_h) != null ? ref17 : 1;
+          pad = (ref18 = params.pad) != null ? ref18 : (ref19 = params.pad_h) != null ? ref19 : 0;
+          isglobal = (ref20 = params.global_pooling) != null ? ref20 : 0;
+          pooltype = ((ref21 = params.pool) != null ? ref21 : 'MAX').toUpperCase();
+          use_floor = (ref22 = params.use_floor) != null ? ref22 : false;
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
           d.chIn = parent.chOut;
@@ -16177,7 +16177,7 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "lrn":
-          mode = (ref20 = n.attribs.lrn_param.norm_region) != null ? ref20 : 'ACROSS_CHANNELS';
+          mode = (ref23 = n.attribs.lrn_param.norm_region) != null ? ref23 : 'ACROSS_CHANNELS';
           size = n.attribs.lrn_param.local_size;
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
@@ -16193,7 +16193,7 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "normalize":
-          mode = (ref21 = n.attribs.norm_param.across_spatial) != null ? ref21 : {
+          mode = (ref24 = n.attribs.norm_param.across_spatial) != null ? ref24 : {
             'ACROSS_SPATIAL': 'ACROSS_CHANNELS'
           };
           d.wIn = parent.wOut;
@@ -16219,37 +16219,37 @@ module.exports = Analyzer = (function() {
             d.hIn = parent.hOut;
             d.wOut = d.wIn;
             d.hOut = d.hIn;
-            ref22 = n.parents;
-            for (k = 0, len1 = ref22.length; k < len1; k++) {
-              p = ref22[k];
+            ref25 = n.parents;
+            for (k = 0, len1 = ref25.length; k < len1; k++) {
+              p = ref25[k];
               d.chIn += p.analysis.chOut;
             }
             d.chOut = d.chIn;
-            ref23 = n.parents;
-            for (l = 0, len2 = ref23.length; l < len2; l++) {
-              p = ref23[l];
+            ref26 = n.parents;
+            for (l = 0, len2 = ref26.length; l < len2; l++) {
+              p = ref26[l];
               failed = failed || (p.analysis.wOut !== d.wIn || p.analysis.hOut !== d.hIn);
             }
           } else if (concat_axis === 2) {
             d.wIn = parent.wOut;
-            ref24 = n.parents;
-            for (m = 0, len3 = ref24.length; m < len3; m++) {
-              p = ref24[m];
+            ref27 = n.parents;
+            for (m = 0, len3 = ref27.length; m < len3; m++) {
+              p = ref27[m];
               d.hIn += p.analysis.hIn;
             }
             d.wOut = d.wIn;
             d.hOut = d.hIn;
             d.chIn = parent.chOut;
             d.chOut = d.chIn;
-            ref25 = n.parents;
-            for (o = 0, len4 = ref25.length; o < len4; o++) {
-              p = ref25[o];
+            ref28 = n.parents;
+            for (o = 0, len4 = ref28.length; o < len4; o++) {
+              p = ref28[o];
               failed = failed || (p.analysis.chOut !== d.chIn || p.analysis.wOut !== d.wIn);
             }
           } else if (concat_axis === 3) {
-            ref26 = n.parents;
-            for (q = 0, len5 = ref26.length; q < len5; q++) {
-              p = ref26[q];
+            ref29 = n.parents;
+            for (q = 0, len5 = ref29.length; q < len5; q++) {
+              p = ref29[q];
               d.wIn += p.analysis.wIn;
             }
             d.hIn = parent.hOut;
@@ -16257,9 +16257,9 @@ module.exports = Analyzer = (function() {
             d.hOut = d.hIn;
             d.chIn = parent.chOut;
             d.chOut = d.chIn;
-            ref27 = n.parents;
-            for (r = 0, len6 = ref27.length; r < len6; r++) {
-              p = ref27[r];
+            ref30 = n.parents;
+            for (r = 0, len6 = ref30.length; r < len6; r++) {
+              p = ref30[r];
               failed = failed || (p.analysis.chOut !== d.chIn || p.analysis.hOut !== d.hIn);
             }
           } else {
@@ -16306,9 +16306,9 @@ module.exports = Analyzer = (function() {
           }
           minW = 99999999;
           p = typeof (base = n.parents)[0] === "function" ? base[0](analysis) : void 0;
-          ref28 = n.parents;
-          for (s = 0, len7 = ref28.length; s < len7; s++) {
-            i = ref28[s];
+          ref31 = n.parents;
+          for (s = 0, len7 = ref31.length; s < len7; s++) {
+            i = ref31[s];
             if (i.analysis.wOut < minW) {
               minW = i.analysis.wOut;
               p = i.analysis;
@@ -16355,7 +16355,7 @@ module.exports = Analyzer = (function() {
           if (failed) {
             onerror('ELTWISE: input dimensions dont agree!');
           }
-          op = (ref29 = (ref30 = n.eltwise_param) != null ? (ref31 = ref30.operation) != null ? ref31.toUpperCase() : void 0 : void 0) != null ? ref29 : 'SUM';
+          op = (ref32 = (ref33 = n.eltwise_param) != null ? (ref34 = ref33.operation) != null ? ref34.toUpperCase() : void 0 : void 0) != null ? ref32 : 'SUM';
           if (op === 'SUM') {
             d.comp.add = d.wIn * d.hIn * d.chIn;
           } else if (op === 'MAX') {
@@ -16369,12 +16369,12 @@ module.exports = Analyzer = (function() {
           break;
         case "deconvolution":
           params = n.attribs.convolution_param;
-          kernel_w = (ref32 = params.kernel_w) != null ? ref32 : params.kernel_size;
-          kernel_h = (ref33 = params.kernel_h) != null ? ref33 : params.kernel_size;
-          stride_w = (ref34 = params.stride_w) != null ? ref34 : (ref35 = params.stride) != null ? ref35 : 1;
-          stride_h = (ref36 = params.stride_h) != null ? ref36 : (ref37 = params.stride) != null ? ref37 : 1;
-          pad_w = (ref38 = params.pad_w) != null ? ref38 : (ref39 = params.pad) != null ? ref39 : 0;
-          pad_h = (ref40 = params.pad_h) != null ? ref40 : (ref41 = params.pad) != null ? ref41 : 0;
+          kernel_w = (ref35 = params.kernel_w) != null ? ref35 : params.kernel_size;
+          kernel_h = (ref36 = params.kernel_h) != null ? ref36 : params.kernel_size;
+          stride_w = (ref37 = params.stride_w) != null ? ref37 : (ref38 = params.stride) != null ? ref38 : 1;
+          stride_h = (ref39 = params.stride_h) != null ? ref39 : (ref40 = params.stride) != null ? ref40 : 1;
+          pad_w = (ref41 = params.pad_w) != null ? ref41 : (ref42 = params.pad) != null ? ref42 : 0;
+          pad_h = (ref43 = params.pad_h) != null ? ref43 : (ref44 = params.pad) != null ? ref44 : 0;
           numout = params.num_output;
           d.wIn = parent != null ? parent.wOut : void 0;
           d.hIn = parent != null ? parent.hOut : void 0;
@@ -16409,13 +16409,13 @@ module.exports = Analyzer = (function() {
         case "implicit":
           if (n.parents && n.parents.length > 0 && n.parents[0].type === 'BinaryActivation') {
             params = n.parents[0].attribs.convolution_param;
-            kernel_w = (ref42 = params.kernel_w) != null ? ref42 : params.kernel_size;
-            kernel_h = (ref43 = params.kernel_h) != null ? ref43 : params.kernel_size;
-            stride_w = (ref44 = params.stride_w) != null ? ref44 : (ref45 = params.stride) != null ? ref45 : 1;
-            stride_h = (ref46 = params.stride_h) != null ? ref46 : (ref47 = params.stride) != null ? ref47 : 1;
-            pad_w = (ref48 = params.pad_w) != null ? ref48 : (ref49 = params.pad) != null ? ref49 : 0;
-            pad_h = (ref50 = params.pad_h) != null ? ref50 : (ref51 = params.pad) != null ? ref51 : 0;
-            dilation = (ref52 = params.dilation) != null ? ref52 : 0;
+            kernel_w = (ref45 = params.kernel_w) != null ? ref45 : params.kernel_size;
+            kernel_h = (ref46 = params.kernel_h) != null ? ref46 : params.kernel_size;
+            stride_w = (ref47 = params.stride_w) != null ? ref47 : (ref48 = params.stride) != null ? ref48 : 1;
+            stride_h = (ref49 = params.stride_h) != null ? ref49 : (ref50 = params.stride) != null ? ref50 : 1;
+            pad_w = (ref51 = params.pad_w) != null ? ref51 : (ref52 = params.pad) != null ? ref52 : 0;
+            pad_h = (ref53 = params.pad_h) != null ? ref53 : (ref54 = params.pad) != null ? ref54 : 0;
+            dilation = (ref55 = params.dilation) != null ? ref55 : 0;
             numout = params.num_output;
             d.wIn = parent.wOut;
             d.hIn = parent.hOut;
@@ -16487,11 +16487,11 @@ module.exports = Analyzer = (function() {
           out: d.chOut + 'ch ⋅ ' + d.wOut + '×' + d.hOut
         };
         ops = ((function() {
-          var ref53, results;
-          ref53 = d.comp;
+          var ref56, results;
+          ref56 = d.comp;
           results = [];
-          for (key in ref53) {
-            val = ref53[key];
+          for (key in ref56) {
+            val = ref56[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }
@@ -16502,11 +16502,11 @@ module.exports = Analyzer = (function() {
           analysis.ops = ops;
         }
         mem = ((function() {
-          var ref53, results;
-          ref53 = d.mem;
+          var ref56, results;
+          ref56 = d.mem;
           results = [];
-          for (key in ref53) {
-            val = ref53[key];
+          for (key in ref56) {
+            val = ref56[key];
             if (val !== 0) {
               results.push(val + '⋅' + key);
             }

@@ -155,9 +155,9 @@ class Analyzer
                 when "pooling"
                     #dimensions
                     params = n.attribs.pooling_param
-                    kernel = params.kernel_size ? params.kernel_size : params.kernel_h
-                    stride = params.stride ? 1
-                    pad    = params.pad ? 0
+                    kernel = params.kernel_size ? params.kernel_h
+                    stride = params.stride ? (params.stride_h ? 1)
+                    pad    = params.pad ? (params.pad_h ? 0)
                     isglobal = params.global_pooling ? 0
                     pooltype = (params.pool ? 'MAX').toUpperCase()
                     use_floor = params.use_floor ? false
