@@ -155,7 +155,7 @@ class Analyzer
                 when "pooling"
                     #dimensions
                     params = n.attribs.pooling_param
-                    kernel = params.kernel_size
+                    kernel = params.kernel_size ? params.kernel_size : params.kernel_h
                     stride = params.stride ? 1
                     pad    = params.pad ? 0
                     isglobal = params.global_pooling ? 0
