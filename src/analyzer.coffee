@@ -54,6 +54,7 @@ class Analyzer
                     pad_h    = params.pad_h ? (params.pad ? 0)
                     dilation = params.dilation ? 0
                     numout   = params.num_output
+                    group    = params.group ? 1
                     d.wIn    = parent.wOut
                     d.hIn    = parent.hOut
                     # according to http://caffe.berkeleyvision.org/tutorial/layers.html and https://github.com/BVLC/caffe/issues/3656 
@@ -68,7 +69,7 @@ class Analyzer
                     d.chIn = parent.chOut
                     d.chOut = numout
                     #computation
-                    d.comp.macc = (kernel_w*kernel_h)*(d.wOut*d.hOut)*d.chIn*d.chOut
+                    d.comp.macc = (kernel_w*kernel_h)*(d.chIn/group)*(d.wOut*d.hOut)*d.chOut
                     #memory
                     d.mem.param = (kernel_w*kernel_h)*d.chIn*d.chOut
                     d.mem.activation = d.wOut*d.hOut*d.chOut
