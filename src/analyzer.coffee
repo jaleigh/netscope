@@ -124,7 +124,7 @@ class Analyzer
                           squeeze_cache : if n.name.indexOf("squeeze") > -1 then d.chOut*d.wOut*d.hOut else ""
                         })
                     
-                when "binaryactivation"
+                when "binaryactivation", "hwgqactivation"
                     #dimensions
                     ## assume pass-through
                     d.wIn = parent.wOut
