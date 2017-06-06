@@ -16112,6 +16112,7 @@ module.exports = Analyzer = (function() {
           }
           break;
         case "binaryactivation":
+        case "hwgqactivation":
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
           d.chIn = parent.chOut;
