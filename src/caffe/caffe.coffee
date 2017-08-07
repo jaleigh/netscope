@@ -30,7 +30,7 @@ generateNetwork = (layers, header) ->
         # Caffe allows top to be a layer which isn't explicitly
         # defined. Create an implicit layer if this is detected.
         if not node?
-            debugger
+            #debugger
             node = net.createNode name, 'implicit'
             nodeTable[name] = node
         return node

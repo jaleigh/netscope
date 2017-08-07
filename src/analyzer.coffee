@@ -243,6 +243,34 @@ class Analyzer
                     d.mem.param = 1
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                     
+                when "slice"
+                    split_axis = 1
+                    slice_pts = []
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.chIn = parent.chOut
+
+                    if n.attribs.slice_param && n.attribs.slice_param.slice_dim?
+                        split_axis = n.attribs.slice_param.slice_dim
+                    if n.attribs.slice_param && n.attribs.slice_param.slice_point?
+                        slice_pts = [].concat(n.attribs.slice_param.slice_point)
+                    if split_axis == 1
+                        d.wOut = d.wIn
+                        d.hOut = d.hIn
+                        if slice_pts.length == 0
+                            d.chOut = d.chIn/2
+                        else
+                            window.oneerror('SLICE: splice_pts not implemented!') if failed
+                    else 
+                        window.oneerror('SLICE: invalid splice_axis!') if failed
+
+                    #computation
+                    #  input*input
+                    num_inputs = d.wIn*d.hIn*d.chIn
+                    #memory
+                    d.mem.param = 1
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+
                 when "concat"
                     #dimensions
                     concat_axis = 1

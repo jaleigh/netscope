@@ -15999,7 +15999,7 @@ module.exports = Analyzer = (function() {
   function Analyzer() {}
 
   Analyzer.prototype.analyze = function(net) {
-    var analysis, base, concat_axis, count, d, dilation, din, failed, group, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, len4, len5, len6, len7, m, mem, minW, mode, n, na, nmsize, nsize, num_inputs, num_ops, num_output, num_priors, numout, o, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref39, ref4, ref40, ref41, ref42, ref43, ref44, ref45, ref46, ref47, ref48, ref49, ref5, ref50, ref51, ref52, ref53, ref54, ref55, ref56, ref6, ref7, ref8, ref9, s, shape, size, stride, stride_h, stride_w, trivial_layers, use_floor, val;
+    var analysis, base, concat_axis, count, d, dilation, din, failed, group, i, isglobal, j, k, kernel, kernel_h, kernel_w, key, kh, kw, l, layertype, len, len1, len2, len3, len4, len5, len6, len7, m, mem, minW, mode, n, na, nmsize, nsize, num_inputs, num_ops, num_output, num_priors, numout, o, op, ops, p, pad, pad_h, pad_w, params, parent, parent2, pooltype, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref31, ref32, ref33, ref34, ref35, ref36, ref37, ref38, ref39, ref4, ref40, ref41, ref42, ref43, ref44, ref45, ref46, ref47, ref48, ref49, ref5, ref50, ref51, ref52, ref53, ref54, ref55, ref56, ref6, ref7, ref8, ref9, s, shape, size, slice_pts, split_axis, stride, stride_h, stride_w, trivial_layers, use_floor, val;
     ref = net.sortTopologically();
     for (j = 0, len = ref.length; j < len; j++) {
       n = ref[j];
@@ -16208,6 +16208,37 @@ module.exports = Analyzer = (function() {
           d.comp.add = num_inputs;
           d.comp.exp = d.wIn * d.hIn * d;
           d.comp.div = 2 * num_inputs;
+          d.mem.param = 1;
+          d.mem.activation = d.wOut * d.hOut * d.chOut;
+          break;
+        case "slice":
+          split_axis = 1;
+          slice_pts = [];
+          d.wIn = parent.wOut;
+          d.hIn = parent.hOut;
+          d.chIn = parent.chOut;
+          if (n.attribs.slice_param && (n.attribs.slice_param.slice_dim != null)) {
+            split_axis = n.attribs.slice_param.slice_dim;
+          }
+          if (n.attribs.slice_param && (n.attribs.slice_param.slice_point != null)) {
+            slice_pts = [].concat(n.attribs.slice_param.slice_point);
+          }
+          if (split_axis === 1) {
+            d.wOut = d.wIn;
+            d.hOut = d.hIn;
+            if (slice_pts.length === 0) {
+              d.chOut = d.chIn / 2;
+            } else {
+              if (failed) {
+                window.oneerror('SLICE: splice_pts not implemented!');
+              }
+            }
+          } else {
+            if (failed) {
+              window.oneerror('SLICE: invalid splice_axis!');
+            }
+          }
+          num_inputs = d.wIn * d.hIn * d.chIn;
           d.mem.param = 1;
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
@@ -16689,7 +16720,6 @@ generateNetwork = function(layers, header) {
       var node;
       node = nodeTable[name];
       if (node == null) {
-        debugger;
         node = net.createNode(name, 'implicit');
         nodeTable[name] = node;
       }
