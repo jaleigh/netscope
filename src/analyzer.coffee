@@ -329,7 +329,7 @@ class Analyzer
                     d.mem.activation = d.wOut*d.hOut*d.chOut
 
                 #relu/dropout use some memory, do some comparisons
-                when "relu", "dropout"
+                when "relu", "dropout", "prelu"
                     #dimensions
                     d.wIn = parent.wOut
                     d.hIn = parent.hOut

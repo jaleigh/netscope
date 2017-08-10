@@ -16318,6 +16318,7 @@ module.exports = Analyzer = (function() {
           break;
         case "relu":
         case "dropout":
+        case "prelu":
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
           d.wOut = d.wIn;
