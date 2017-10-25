@@ -340,7 +340,7 @@ class Analyzer
                     d.comp.comp = d.wIn*d.hIn*d.chIn
                     #memory
                     d.mem.activation = d.wOut*d.hOut*d.chOut
-                    
+
                 when "priorbox"
                     #dimensions
                     na = [].concat(n.attribs.prior_box_param.aspect_ratio).length
@@ -459,7 +459,7 @@ class Analyzer
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                           
                 #scale layer use activation memory and does multiplies
-                when "scale"
+                when "scale", "power"
                     #dimensions
                     ## assume pass-through
                     d.wIn = parent?.wOut

@@ -16431,6 +16431,7 @@ module.exports = Analyzer = (function() {
           d.mem.activation = d.wOut * d.hOut * d.chOut;
           break;
         case "scale":
+        case "power":
           d.wIn = parent != null ? parent.wOut : void 0;
           d.hIn = parent != null ? parent.hOut : void 0;
           d.chIn = parent != null ? parent.chOut : void 0;
