@@ -43,7 +43,7 @@ class Analyzer
                     #-- none 
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                   
-                when "convolution", "binaryconvolution"
+                when "convolution", "convolutiondepthwise", "binaryconvolution"
                     #dimensions
                     params   = n.attribs.convolution_param
                     kernel_w = params.kernel_w ? params.kernel_size
