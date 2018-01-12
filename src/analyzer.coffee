@@ -21,10 +21,10 @@ class Analyzer
             parent = n.parents[0]?.analysis
                 
             switch layertype
-                when "data"
+                when "data", "hdf5data"
                     #dimensions
                     if n.attribs.input_param?.shape?
-                        shape = n.attribs.input_param.shape
+                        shape   = n.attribs.input_param.shape
                         d.chIn  = shape.dim[1]
                         d.hIn   = shape.dim[2]
                         d.wIn   = shape.dim[3]
@@ -32,8 +32,10 @@ class Analyzer
                         d.wIn  = d.hIn = n.attribs.transform_param.crop_size
                         d.chIn = 3
                     else
-                        onerror('Unknown Input Dimensions')
-                        debugger;
+                        d.wIn  = d.hIn = 224
+                        d.chIn = 3
+                        #onerror('Unknown Input Dimensions')
+                        #debugger;
                     d.wOut  = d.wIn
                     d.hOut  = d.hIn
                     d.chOut = d.chIn
@@ -43,6 +45,43 @@ class Analyzer
                     #-- none 
                     d.mem.activation = d.wOut*d.hOut*d.chOut
                   
+                when "lstm"
+                    params   = n.attribs.recurrent_param
+                    d.wIn    = parent.wOut
+                    d.hIn    = parent.hOut
+                    d.chIn   = parent.chOut
+                    d.chOut  = params.num_output
+                    #computation
+                    d.comp.macc = (d.wIn*d.hIn)*d.chIn*d.chOut*3
+                    #memory
+                    d.mem.activation = (d.wIn*d.hIn)*d.chIn*d.chOut*3
+
+                when "embed"
+                    params   = n.attribs.embed_param
+                    d.wIn    = parent.wOut
+                    d.hIn    = parent.hOut
+                    d.chIn   = parent.chOut
+                    d.chOut  = params.num_output
+                    d.wOut   = d.wIn
+                    d.hOut   = d.wOut
+                    #computation
+                    d.comp.macc = (d.wIn*d.hIn)*d.chIn*d.chOut
+                    #memory
+                    d.mem.activation = (d.wIn*d.hIn)*d.chIn*d.chOut
+
+                when "tile"
+                    params   = n.attribs.tile_param
+                    d.wIn    = parent.wOut
+                    d.hIn    = parent.hOut
+                    d.chIn   = parent.chOut
+                    d.chOut  = d.chIn
+                    d.wOut   = d.wIn
+                    d.hOut   = d.wOut
+                    #computation
+                    d.comp.add = 0
+                    #memory
+                    d.mem.activation = (d.wIn*d.hIn)*d.chIn*d.chOut
+
                 when "convolution", "convolutiondepthwise", "binaryconvolution"
                     #dimensions
                     params   = n.attribs.convolution_param
@@ -373,6 +412,18 @@ class Analyzer
                     
                 when "softmax", "softmaxwithloss", "softmax_loss"
                     #dimensions
+                    d.wIn = parent.wOut
+                    d.hIn = parent.hOut
+                    d.wOut = d.wIn
+                    d.hOut = d.hIn
+                    d.chOut = d.chIn = parent.chOut
+                    #computation
+                    d.comp.add = d.wIn*d.hIn*d.chIn
+                    d.comp.div = d.wIn*d.hIn*d.chIn
+                    #memory
+                    d.mem.activation = d.wOut*d.hOut*d.chOut
+
+                when "sigmoid", "sigmoidcrossentropyloss"
                     d.wIn = parent.wOut
                     d.hIn = parent.hOut
                     d.wOut = d.wIn

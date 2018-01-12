@@ -16022,6 +16022,7 @@ module.exports = Analyzer = (function() {
       parent = (ref1 = n.parents[0]) != null ? ref1.analysis : void 0;
       switch (layertype) {
         case "data":
+        case "hdf5data":
           if (((ref2 = n.attribs.input_param) != null ? ref2.shape : void 0) != null) {
             shape = n.attribs.input_param.shape;
             d.chIn = shape.dim[1];
@@ -16031,13 +16032,44 @@ module.exports = Analyzer = (function() {
             d.wIn = d.hIn = n.attribs.transform_param.crop_size;
             d.chIn = 3;
           } else {
-            onerror('Unknown Input Dimensions');
-            debugger;
+            d.wIn = d.hIn = 224;
+            d.chIn = 3;
           }
           d.wOut = d.wIn;
           d.hOut = d.hIn;
           d.chOut = d.chIn;
           d.mem.activation = d.wOut * d.hOut * d.chOut;
+          break;
+        case "lstm":
+          params = n.attribs.recurrent_param;
+          d.wIn = parent.wOut;
+          d.hIn = parent.hOut;
+          d.chIn = parent.chOut;
+          d.chOut = params.num_output;
+          d.comp.macc = (d.wIn * d.hIn) * d.chIn * d.chOut * 3;
+          d.mem.activation = (d.wIn * d.hIn) * d.chIn * d.chOut * 3;
+          break;
+        case "embed":
+          params = n.attribs.embed_param;
+          d.wIn = parent.wOut;
+          d.hIn = parent.hOut;
+          d.chIn = parent.chOut;
+          d.chOut = params.num_output;
+          d.wOut = d.wIn;
+          d.hOut = d.wOut;
+          d.comp.macc = (d.wIn * d.hIn) * d.chIn * d.chOut;
+          d.mem.activation = (d.wIn * d.hIn) * d.chIn * d.chOut;
+          break;
+        case "tile":
+          params = n.attribs.tile_param;
+          d.wIn = parent.wOut;
+          d.hIn = parent.hOut;
+          d.chIn = parent.chOut;
+          d.chOut = d.chIn;
+          d.wOut = d.wIn;
+          d.hOut = d.wOut;
+          d.comp.add = 0;
+          d.mem.activation = (d.wIn * d.hIn) * d.chIn * d.chOut;
           break;
         case "convolution":
         case "convolutiondepthwise":
@@ -16361,6 +16393,17 @@ module.exports = Analyzer = (function() {
         case "softmax":
         case "softmaxwithloss":
         case "softmax_loss":
+          d.wIn = parent.wOut;
+          d.hIn = parent.hOut;
+          d.wOut = d.wIn;
+          d.hOut = d.hIn;
+          d.chOut = d.chIn = parent.chOut;
+          d.comp.add = d.wIn * d.hIn * d.chIn;
+          d.comp.div = d.wIn * d.hIn * d.chIn;
+          d.mem.activation = d.wOut * d.hOut * d.chOut;
+          break;
+        case "sigmoid":
+        case "sigmoidcrossentropyloss":
           d.wIn = parent.wOut;
           d.hIn = parent.hOut;
           d.wOut = d.wIn;
